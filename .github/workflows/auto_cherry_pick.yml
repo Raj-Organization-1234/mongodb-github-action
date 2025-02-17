@@ -1,0 +1,40 @@
+name: Auto Cherry-Pick from Upstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: "Base branch to create the PR against"
+        required: true
+        type: string
+      package_manager:
+        description: "Specify package manager (npm or yarn)"
+        required: true
+        type: string
+        default: "npm"
+      use_private_packages:
+        description: "Use private packages (default: false)"
+        required: false
+        type: boolean
+        default: false
+      script:
+        description: "Specify the npm/yarn script to run"
+        required: true
+        type: string
+        default: "npm run build"
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: read
+
+jobs:
+  audit-fix:
+    uses: step-security/reusable-workflows/.github/workflows/auto_cherry_pick.yaml@fix_Auto-Cherry-Pick
+    with:
+      original-owner: "supercharge"
+      repo-name: "mongodb-github-action"
+      base_branch: ${{ inputs.base_branch }}
+      package_manager: ${{ inputs.package_manager }}
+      use_private_packages: ${{ inputs.use_private_packages }}
+      script: ${{ inputs.script }}
