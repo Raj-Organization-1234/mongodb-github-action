@@ -1,0 +1,82 @@
+name: Replica Set Tests
+
+on: [push, pull_request]
+
+jobs:
+  single-node-replica-set-on-default-port:
+    name: MongoDB v${{ matrix.mongodb-version }} RS — Node.js v${{ matrix.node-version }}
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        mongodb-version: ['4.4', '5.0', '6.0']
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Start MongoDB Server v${{ matrix.mongodb-version }}
+        uses: ./
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-replica-set: mongodb-test-rs
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test ./test/replica-set
+        env:
+          CI: true
+          MONGODB_REPLICA_SET: mongodb-test-rs
+
+  single-node-replica-set-on-custom-port:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        mongodb-port: [23456]
+        mongodb-version: ['4.4', '5.0', '6.0']
+
+    name: MongoDB v${{ matrix.mongodb-version }} RS, Port ${{ matrix.mongodb-port }} — Node.js v${{ matrix.node-version }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Start MongoDB Server v${{ matrix.mongodb-version }}
+        uses: ./
+        with:
+          mongodb-port: ${{ matrix.mongodb-port }}
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-replica-set: mongodb-test-rs
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test ./test/replica-set
+        env:
+          CI: true
+          MONGODB_PORT: ${{ matrix.mongodb-port }}
+          MONGODB_REPLICA_SET: mongodb-test-rs
