@@ -163,11 +163,16 @@ jobs:
               echo "⚠️ Workflow file changes detected. They will not be committed."
               WORKFLOW_CHANGES=true
               
+              git checkout HEAD -- .github/workflows/
               git reset HEAD -- .github/workflows/
-              git checkout -- .github/workflows/
             fi
 
-            CHANGES_FOUND=true
+            if git diff --cached --quiet; then
+              echo "No real changes after workflow cleanup."
+            else
+              CHANGES_FOUND=true
+            fi
+
             git commit --amend --no-edit --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
           done <<< "${{ env.NEW_COMMITS }}"
@@ -186,6 +191,7 @@ jobs:
           echo "SKIPPED_COMMITS<<EOF" >> $GITHUB_ENV
           echo -e "$SKIPPED_COMMITS" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
 
 
       - name: Set Up Node.js
